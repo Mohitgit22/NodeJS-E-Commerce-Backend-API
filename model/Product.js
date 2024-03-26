@@ -67,6 +67,26 @@ const ProductSchema = new Schema({
     }
 );
 
+
+//Virtuals ==> are properties that does not persist on the record in our database but on quering we can have that property on our model
+//Total Rating
+ProductSchema.virtual('totalReviews').get(function() {//gives total no. of reviews for a product
+   const product = this;
+   return product?.reviews?.length;
+})
+//average rating
+ProductSchema.virtual('averageRating').get(function() {
+    let ratingsTotal = 0;
+    const product = this;
+    product?.reviews?.forEach((review)=>{
+        ratingsTotal += review?.rating;
+    });
+    //calc average rating
+    const averageRating = Number(ratingsTotal / product?.reviews?.length).toFixed(1);
+    return averageRating;
+})
+
 const Product = mongoose.model("Product", ProductSchema);
 
 export default Product;
+

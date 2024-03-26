@@ -1,4 +1,6 @@
 import Product from "../model/Product.js";
+import Brand from "../model/Brand.js";
+import Category from "../model/Category.js";
 import asyncHandler from "express-async-handler";
 
 
@@ -7,6 +9,7 @@ import asyncHandler from "express-async-handler";
 // @access Private/Admin
 
 export const createProductCtrl = asyncHandler(async (req, res) => {
+    console.log(req.body);
     const { name, description, category, sizes, colors, user, price, totalQty, brand } = req.body;
     // for admin user only
 
@@ -16,7 +19,26 @@ export const createProductCtrl = asyncHandler(async (req, res) => {
     if (productExists) {
         throw new Error("Product already exists");
     }
+      //find the brand
+      const brandFound = await Brand.findOne({
+        name:"addidas",
+      });
 
+      if(!brandFound){
+        throw new Error(
+            "Brand not found, please create first or check brand name"
+        );
+      }
+
+      //find the category
+      const categoryFound = await Category.findOne({
+        name: category,
+      });
+      if(!categoryFound) {
+        throw new Error(
+            "Category not found, please create category first or check category name"
+        );
+      }
     //create the product
     const product = await Product.create({
         name,
@@ -30,7 +52,13 @@ export const createProductCtrl = asyncHandler(async (req, res) => {
         brand
     });
     // push the product into category
-
+    categoryFound.products.push(product._id);
+    //resave
+    await categoryFound.save();
+    //push the products into brand
+    brandFound.products.push(product._id);
+    //resave
+    await brandFound.save();
     //send response
     res.json({
         status: "success",
@@ -69,7 +97,7 @@ export const getProductsCtrl = asyncHandler(async (req, res) => {
         })
     }
     //filter by color
-    if (req.query.colors) {
+    if (req.query.color) {
         productQuery = productQuery.find({
             colors: { $regex: req.query.colors, $options: "i" },
         })
@@ -85,7 +113,7 @@ export const getProductsCtrl = asyncHandler(async (req, res) => {
         const priceRange = req.query.price.split("-");
         // using gte:greater than or equal
         // using lte:less than or equal
-        productQuery.find({
+         productQuery = productQuery.find({
             price: { $gte: priceRange[0], $lte: priceRange[1] },
         });
     }
@@ -126,7 +154,7 @@ export const getProductsCtrl = asyncHandler(async (req, res) => {
 
 
     //await the query
-    const products = await productQuery;
+    const products = await productQuery.populate("reviews");
 
     res.json({
         status: "success",
@@ -143,7 +171,13 @@ export const getProductsCtrl = asyncHandler(async (req, res) => {
 // @access Public
 
 export const getProductCtrl = asyncHandler(async (req, res) => {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).populate({
+        path: "reviews",
+        populate: {
+            path: "user",
+            select:"fullname"
+        },
+    });
     if (!product) {
         throw new Error('Product not found')
     }
@@ -151,7 +185,7 @@ export const getProductCtrl = asyncHandler(async (req, res) => {
         status: 'success',
         message: 'Product fetched successfully',
         product,
-    })
+    });
 });
 
 
@@ -174,6 +208,7 @@ export const updateProductCtrl = asyncHandler(async (req, res) => {
         brand
     },{
         new: true,
+        runValidators: true,
     });
 
     res.json({

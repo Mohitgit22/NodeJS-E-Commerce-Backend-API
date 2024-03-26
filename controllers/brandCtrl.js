@@ -7,7 +7,7 @@ import Brand from "../model/Brand.js";
 
 export const createBrandCtrl = asyncHandler(async (req, res) => {
     const { name } = req.body;
-    //brand exists akready
+    //brand exists already
     const brandFound = await Brand.findOne({ name });
     if(brandFound) {
         throw new Error (" Brand already exists");
