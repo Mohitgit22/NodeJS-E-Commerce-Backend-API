@@ -21,7 +21,7 @@ export const createProductCtrl = asyncHandler(async (req, res) => {
     }
       //find the brand
       const brandFound = await Brand.findOne({
-        name:"addidas",
+        name:brand?.toLowerCase(),
       });
 
       if(!brandFound){

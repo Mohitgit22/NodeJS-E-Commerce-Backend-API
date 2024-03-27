@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import asyncHandler from "express-async-handler";
 import generateToken from "../utils/generateToken.js";
 import { getTokenFromHeader } from "../utils/getTokenFromHeader.js";
-import {verifyToken} from "../utils/verifyToken.js";
+import { verifyToken } from "../utils/verifyToken.js";
 
 
 
@@ -11,58 +11,58 @@ import {verifyToken} from "../utils/verifyToken.js";
 // @route POST /api/v1/users/register
 // @access Private/Admin
 
-export const registerUserCtrl =  asyncHandler(async(req, res) => {
+export const registerUserCtrl = asyncHandler(async (req, res) => {
     const { fullname, email, password } = req.body;
- 
+
     //check user exists
     const userExists = await User.findOne({ email });
 
-    if(userExists) {
-     // throw error
-     throw new Error("User already exists");
+    if (userExists) {
+        // throw error
+        throw new Error("User already exists");
     }
- 
-   
+
+
     //hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
- 
- 
-     // if new user , create new user
-     const user = await User.create({
-         fullname,
-          email,
-          password: hashedPassword,
- 
-     });
-     res.status(201).json({
-         status: "success",
-         message: "User registered successfully",
-         data: user,
-     })
- });
+
+
+    // if new user , create new user
+    const user = await User.create({
+        fullname,
+        email,
+        password: hashedPassword,
+
+    });
+    res.status(201).json({
+        status: "success",
+        message: "User registered successfully",
+        data: user,
+    })
+});
 
 
 // @desc Logic user
 // @route POST /api/v1/users/login
 // @access Public
 
-export const loginUserCtrl = asyncHandler(async(req, res) => {
-    const { email, password} = req.body;
+export const loginUserCtrl = asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
     const userFound = await User.findOne({
         email
     });
-    if(userFound && await bcrypt.compare(password,userFound?.password)){
-             res.json({
-            status:"success",
+    if (userFound && await bcrypt.compare(password, userFound?.password)) {
+        res.json({
+            status: "success",
             message: "User logged in successfully",
             userFound,
             token: generateToken(userFound?._id)
-           })
-    }else{
+        })
+    } else {
         throw new Error("Invalid login credentials")
     }
-    
+
 });
 
 
@@ -70,12 +70,59 @@ export const loginUserCtrl = asyncHandler(async(req, res) => {
 // @route GET /api/v1/users/profile4
 // @access Private
 
-export const getUserProfileCtrl = asyncHandler(async(req, res) => {
+export const getUserProfileCtrl = asyncHandler(async (req, res) => {
     const token = getTokenFromHeader(req);
     //verify token
     const verified = verifyToken(token);
     console.log(verified);
     res.json({
-        msg:" Welcome Profile page"
+        msg: " Welcome Profile page"
     })
 })
+
+// @desc    Update user shipping address
+// @route   PUT /api/v1/users/update/shipping
+// @access  Private
+
+
+
+
+
+export const updateShippingAddressCtrl = asyncHandler(async (req, res) => {
+    const {
+      firstName,
+      lastName,
+      address,
+      city,
+      postalCode,
+      province,
+      phone,
+      country,
+    } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.userAuthId,
+      {
+        shippingAddress: {
+          firstName,
+          lastName,
+          address,
+          city,
+          postalCode,
+          province,
+          phone,
+          country,
+        },
+        hasShippingAddress: true,
+      },
+      {
+        new: true,
+      }
+    );
+    //send response
+    res.json({
+      status: "success",
+      message: "User shipping address updated successfully",
+      user,
+      shippingAddress: user.shippingAddress 
+    });
+  });
