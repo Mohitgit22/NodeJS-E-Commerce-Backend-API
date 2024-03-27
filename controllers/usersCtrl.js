@@ -71,14 +71,14 @@ export const loginUserCtrl = asyncHandler(async (req, res) => {
 // @access Private
 
 export const getUserProfileCtrl = asyncHandler(async (req, res) => {
-    const token = getTokenFromHeader(req);
-    //verify token
-    const verified = verifyToken(token);
-    console.log(verified);
-    res.json({
-        msg: " Welcome Profile page"
-    })
-})
+  //find the user
+  const user = await User.findById(req.userAuthId).populate("orders");
+  res.json({
+    status: "success",
+    message: "User profile fetched successfully",
+    user,
+  });
+});
 
 // @desc    Update user shipping address
 // @route   PUT /api/v1/users/update/shipping
