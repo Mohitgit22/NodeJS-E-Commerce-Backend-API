@@ -1,5 +1,5 @@
 import express from "express";
-// import categoryFileUpload from "../config/categoryUpload.js";
+import categoryFileUpload from "../config/categoryUpload.js";
 
 import {
     createCategoryCtrl,
@@ -15,7 +15,7 @@ const categoriesRouter = express.Router();
 
 categoriesRouter.post("/",
     isLoggedIn,
-    //categoryFileUpload.single("file"),
+    categoryFileUpload.single("file"),
     createCategoryCtrl
 );
 

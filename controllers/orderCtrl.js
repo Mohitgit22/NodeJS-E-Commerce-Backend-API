@@ -8,7 +8,7 @@ import Stripe from "stripe";
 import Order from "../model/Order.js";
 import Product from "../model/Product.js";
 import User from "../model/User.js";
-//import Coupon from "../model/Coupon.js";
+import Coupon from "../model/Coupon.js";
 
 
 //@desc create orders
@@ -22,21 +22,21 @@ const stripe = new Stripe(process.env.STRIPE_KEY);
 
 
 export const createOrderCtrl = asyncHandler(async (req, res) => {
-  // //get teh coupon
-  // const { coupon } = req?.query;
+  //get the coupon
+  const { coupon } = req?.query;
 
-  // const couponFound = await Coupon.findOne({
-  //   code: coupon?.toUpperCase(),
-  // });
-  // if (couponFound?.isExpired) {
-  //   throw new Error("Coupon has expired");
-  // }
-  // if (!couponFound) {
-  //   throw new Error("Coupon does exists");
-  // }
+  const couponFound = await Coupon.findOne({
+    code: coupon?.toUpperCase(),
+  });
+  if (couponFound?.isExpired) {
+    throw new Error("Coupon has expired");
+  }
+  if (!couponFound) {
+    throw new Error("Coupon does not exists");
+  }
 
   //get discount
-  // const discount = couponFound?.discount / 100;
+  const discount = couponFound?.discount / 100;
 
   //Get the payload(customer, orderItems, shipppingAddress, totalPrice);
   const { orderItems, shippingAddress, totalPrice } = req.body;
@@ -56,9 +56,12 @@ export const createOrderCtrl = asyncHandler(async (req, res) => {
     user: user?._id,
     orderItems,
     shippingAddress,
-    // totalPrice: couponFound ? totalPrice - totalPrice * discount : totalPrice,
-    totalPrice,
+     totalPrice: couponFound ? totalPrice - totalPrice * discount : totalPrice,
+    //  totalPrice
   });
+
+  //coupon effect can b seen in console.log (order)
+  // console.log(order);
 
   //Update the product qty
   const products = await Product.find({ _id: { $in: orderItems } });
