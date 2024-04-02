@@ -33,7 +33,7 @@ app.use(express.json());
 const stripe = new Stripe(process.env.STRIPE_KEY);
 
 // This is your Stripe CLI webhook secret for testing your endpoint locally.
-const endpointSecret = "whsec_e28676df35e6f5d1e3e7513241c1de7802cdc7cd506ef91f3ecf4d3205ce03bb";
+
 
 app.post(
     "/webhook",
@@ -44,7 +44,7 @@ app.post(
       let event;
   
       try {
-        event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
+        event = stripe.webhooks.constructEvent(request.body, sig, process.env.ENDPOINTSECRET);
         console.log("event");
       } catch (err) {
         console.log("err", err.message);
@@ -116,8 +116,3 @@ app.use(globalErrhandler);
 
 export default app;
 
-// M61qXH3Go8WHWBbE
-//Mongo db password
-
-//connection string
-// mongodb+srv://mohitverma77377:<password>@nodejs-ecommerce-api.sqx6czr.mongodb.net/
